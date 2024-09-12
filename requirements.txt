@@ -10,3 +10,4 @@ qrcode~=7.4.2
 Pyside6
 PySide6-Fluent-Widgets[full]
 colorlog
+opencv-python
