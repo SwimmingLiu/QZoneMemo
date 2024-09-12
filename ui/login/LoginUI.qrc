@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="login">
+    <file>../../images/QzoneLogo.png</file>
+    <file>../../images/Qzone.jpg</file>
+  </qresource>
+  <qresource prefix="qrcode">
+    <file>../../images/QRcodeLogo.png</file>
+  </qresource>
+</RCC>

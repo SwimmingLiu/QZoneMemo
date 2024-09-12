@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="logo">
+    <file>../images/QzoneLogo.png</file>
+  </qresource>
+  <qresource prefix="background">
+    <file>../images/background.jpg</file>
+  </qresource>
+  <qresource prefix="tool">
+    <file>../images/find_memo.png</file>
+    <file>../images/show_memo.png</file>
+    <file>../images/excel.png</file>
+  </qresource>
+</RCC>
