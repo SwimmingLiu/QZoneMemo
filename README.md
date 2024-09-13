@@ -3,7 +3,7 @@
 
 ***QZoneMemo*** : 获取QQ空间发布的历史说说/动态/转发/好友评论 (包括已删除的动态)
 
-![QzoneMemo-Screen](https://oss.swimmingliu.cn/qzonememo_screen.png)
+![QzoneMemo-Screen](assests\qzonememo_screen.png)
 
 ## 准备工作 
 

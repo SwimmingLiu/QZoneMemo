@@ -1,1 +1,1 @@
-pyinstaller -D --exclude-module PyQt5 --exclude-module torch --exclude-module torchvision --hidden-import=bs4 --hidden-import=png --hidden-import=bs4.builder._htmlparser --hidden-import=html.parser --hidden-import=beautifulsoup4 --distpath ".\BinaryExec" -w -i ".\images\Logo.ico" main.py
+pyinstaller -D --exclude-module PyQt5 --exclude-module torch --exclude-module torchvision --hidden-import=bs4 --distpath ".\BinaryExec" -w -i ".\images\Logo.ico" main.py
