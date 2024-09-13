@@ -1,22 +1,26 @@
-import configparser
 import os
-
-CONFIG_PATH = 'config/config.ini'
+import yaml
+CONFIG_PATH = 'config/config.yaml'
 
 
 class ConfigUtil:
     def __init__(self, config_path=CONFIG_PATH):
         # 初始化配置文件
-        self.config = configparser.ConfigParser()
-        self.config.read(config_path)
+        self.config = self.read_yaml(config_path)
 
         # 获取路径配置
-        self.temp_path = self.config.get('File', 'temp')
-        self.user_path = self.config.get('File', 'user')
-        self.result_path = self.config.get('File', 'result')
+        self.temp_path = self.config['temp']
+        self.user_path = self.config['user']
+        self.result_path = self.config['result']
 
         # 初始化文件夹
         self.init_folders()
+
+    # 读取 YAML 文件
+    def read_yaml(self, file_path):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            config = yaml.safe_load(file)
+        return config
 
     def init_folders(self):
         # 初始化temp文件夹

@@ -1,1 +1,1 @@
-pyinstaller -D --exclude-module PyQt5 --exclude-module torch --exclude-module torchvision --hidden-import=bs4 --distpath ".\BinaryExec" -w -i ".\images\Logo.ico" main.py
+pyinstaller -D --hidden-import=pyzbar --distpath ".\BinaryExec" -w -i ".\images\Logo.ico" main.py --add-data ui:ui --add-data images:images

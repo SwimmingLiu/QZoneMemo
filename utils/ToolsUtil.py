@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 
 # 提取两个字符串之间的内容
@@ -107,3 +108,12 @@ def get_html_template():
     """
 
     return html_template, post_template
+
+
+def safe_strptime(date_str):
+    try:
+        # 尝试按照指定格式解析日期
+        return datetime.strptime(date_str, "%Y年%m月%d日 %H:%M")
+    except ValueError:
+        # 如果日期格式不对，返回 datetime.max
+        return datetime.max
