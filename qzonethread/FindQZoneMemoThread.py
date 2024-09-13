@@ -13,6 +13,7 @@ from PySide6.QtCore import QThread, Signal
 from utils.ConfigUtil import ConfigUtil
 from utils.QZoneClientUtil import QZoneClientUtil
 
+from utils.QZoneExporter import *
 
 class FindQZoneMemoThread(QThread):
     send_progress = Signal(int)
@@ -33,57 +34,11 @@ class FindQZoneMemoThread(QThread):
         self.config = ConfigUtil()
         self.progress_bar = 0
         self.render_html_url = None
+        self.exporter = None
 
-    def render_html(self, shuoshuo_path, zhuanfa_path):
-        # 读取 Excel 文件内容
-        shuoshuo_df = pd.read_excel(shuoshuo_path)
-        zhuanfa_df = pd.read_excel(zhuanfa_path)
-        # 头像
-        avatar_url = f"https://q.qlogo.cn/headimg_dl?dst_uin={self.qzone_client.uin}&spec=640&img_type=jpg"
-        # 提取说说列表中的数据
-        shuoshuo_data = shuoshuo_df[['时间', '内容', '图片链接']].values.tolist()
-        # 提取转发列表中的数据
-        zhuanfa_data = zhuanfa_df[['时间', '内容', '图片链接']].values.tolist()
-        # 合并所有数据
-        all_data = shuoshuo_data + zhuanfa_data
-        # 按时间排序
-        all_data.sort(key=lambda x: datetime.strptime(x[0], "%Y年%m月%d日 %H:%M"), reverse=True)
-        html_template, post_template = Tools.get_html_template()
-        # 构建动态内容
-        post_html = ""
-        for entry in all_data:
-            try:
-                time, content, img_url = entry
-                img_url = str(img_url)
-                content_lst = content.split("：")
-                if len(content_lst) == 1:
-                    continue
-                nickname = content_lst[0]
-                message = content_lst[1]
 
-                image_html = f'<div class="image"><img src="{img_url}" alt="图片"></div>' if img_url and img_url.startswith(
-                    'http') else ''
-
-                # 生成每个动态的HTML块
-                post_html += post_template.format(
-                    avatar_url=avatar_url,
-                    nickname=nickname,
-                    time=time,
-                    message=message,
-                    image=image_html
-                )
-            except Exception as err:
-                print(err)
-
-        # 生成完整的HTML
-        final_html = html_template.format(posts=post_html)
-        user_save_path = self.config.result_path + self.qzone_client.uin + '/'
-        # 将HTML写入文件
-        output_file = os.path.join(os.getcwd(), user_save_path, "qzone_posts.html")
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(final_html)
-        self.render_html_url = output_file
-        self.send_message.emit('复刻QQ空间说说记录成功!')
+    # def render_html(self, shuoshuo_path, zhuanfa_path):
+    #     self.render_html_url = self.exporter.render_html(shuoshuo_path, zhuanfa_path)
 
     def save_data(self):
         user_save_path = self.config.result_path + self.qzone_client.uin + '/'
@@ -196,14 +151,24 @@ class FindQZoneMemoThread(QThread):
             # 获取QQ空间消息总数
             count = self.get_message_count()
             self.send_message.emit("开 始 获 取 历 史 Q Q 空 间 动 态 总 数 ...")
-            # 爬取历史空间消息数据
+            # 爬取历史空间消息数据render_html_url
             self.get_memo(count)
         except Exception as e:
             print(f"发生异常: {str(e)}")
         self.send_result.emit("获 取 历 史 Q Q 空 间 数 据 成 功!")
         # 保存数据
         if len(self.texts) > 0:
-            self.save_data()
+            self.exporter = QZoneExporter(
+                qzone_client=self.qzone_client,
+                config=self.config,
+                texts=self.texts,
+                all_friends=self.all_friends,
+                user_nickname=self.user_nickname,
+                send_message=self.send_message,  # 传递信号
+                send_result=self.send_result  # 传递信号
+            )
+            self.render_html_url = self.exporter.save_data(read_only=False)
+
         else:
             self.send_message.emit("获 取 到 的 历 史 Q Q 空 间 数 据 为 空!")
 
@@ -232,7 +197,6 @@ class FindQZoneMemoThread(QThread):
                 self.send_progress.emit(count)
         self.send_progress.emit(100)
         return total
-
 
 if __name__ == '__main__':
     thread = FindQZoneMemoThread()
