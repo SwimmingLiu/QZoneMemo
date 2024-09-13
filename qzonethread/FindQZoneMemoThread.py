@@ -1,7 +1,5 @@
 from datetime import datetime
-
 from bs4 import BeautifulSoup
-from tqdm import trange, tqdm
 import utils.ToolsUtil as Tools
 import pandas as pd
 import os
@@ -99,7 +97,7 @@ class FindQZoneMemoThread(QThread):
         pd.DataFrame(self.all_friends, columns=['昵称', 'QQ', '空间主页']).to_excel(
             user_save_path + self.qzone_client.uin + '_好友列表.xlsx', index=False)
         self.send_message.emit(f"已成功导出: {self.qzone_client.uin + '_好友列表.xlsx'}")
-        for item in tqdm(self.texts, desc="处理消息列表", unit="item"):
+        for item in self.texts:
             item_text = item[1]
             item_pic_link = item[2]
             if item_pic_link and 'http' in item_pic_link:
@@ -147,7 +145,7 @@ class FindQZoneMemoThread(QThread):
 
     def get_memo(self, count):
         self.send_message.emit("开 始 获 取 历 史 Q Q 空 间 动 态 详 情 ...")
-        for i in trange(int(count / 100) + 1, desc='Progress', unit='100条'):
+        for i in range(int(count / 100) + 1):
             try:
                 message = self.qzone_client.get_message(i * 100, 100).content.decode('utf-8')
                 time.sleep(0.2)
@@ -214,22 +212,20 @@ class FindQZoneMemoThread(QThread):
         upper_bound = 10000000  # 假设最大总量为10000000
         total = upper_bound // 2  # 初始的总量为上下界的中间值
         count = 0
-        with tqdm(desc="正在获取消息列表数量...") as pbar:
-            while lower_bound <= upper_bound:
-                response = self.qzone_client.get_message(total, 100)
-                if response is None:
-                    print("获取消息失败")
-                    return None
-                if "li" in response.text:
-                    # 请求成功，总量应该在当前总量的右侧
-                    lower_bound = total + 1
-                else:
-                    # 请求失败，总量应该在当前总量的左侧
-                    upper_bound = total - 1
-                total = (lower_bound + upper_bound) // 2  # 更新总量为新的中间值
-                pbar.update(1)
-                count += 1
-                self.send_progress.emit(count)
+        while lower_bound <= upper_bound:
+            response = self.qzone_client.get_message(total, 100)
+            if response is None:
+                print("获取消息失败")
+                return None
+            if "li" in response.text:
+                # 请求成功，总量应该在当前总量的右侧
+                lower_bound = total + 1
+            else:
+                # 请求失败，总量应该在当前总量的左侧
+                upper_bound = total - 1
+            total = (lower_bound + upper_bound) // 2  # 更新总量为新的中间值
+            count += 1
+            self.send_progress.emit(count)
         self.send_progress.emit(100)
         return total
 

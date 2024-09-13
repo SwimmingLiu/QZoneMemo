@@ -115,7 +115,8 @@ background: qlineargradient(
           <item>
            <widget class="TitleLabel" name="TitleLabel_2">
             <property name="styleSheet">
-             <string notr="true">font: 20pt &quot;Times New Roman&quot;;</string>
+             <string notr="true">font: 20pt &quot;Times New Roman&quot;;
+color: black;</string>
             </property>
             <property name="text">
              <string>QZoneMemo - </string>
@@ -125,7 +126,8 @@ background: qlineargradient(
           <item>
            <widget class="TitleLabel" name="TitleLabel">
             <property name="styleSheet">
-             <string notr="true">font: 20pt &quot;黑体&quot;;</string>
+             <string notr="true">font: 20pt &quot;黑体&quot;;
+color: black;</string>
             </property>
             <property name="text">
              <string>空间回忆录</string>
@@ -189,7 +191,9 @@ background: qlineargradient(
         <widget class="SubtitleLabel" name="message_bar">
          <property name="styleSheet">
           <string notr="true">font: 700 15pt &quot;宋体&quot;;
-</string>
+color: black;
+border: 0px solid rgba(0, 0, 0, 0.073);
+border-top: 1px solid rgba(0, 0, 0, 0.183);</string>
          </property>
          <property name="text">
           <string>获 取 登 录 验 证 码 . . .</string>

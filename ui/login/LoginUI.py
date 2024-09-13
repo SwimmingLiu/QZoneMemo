@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QMainWindow,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
 
 from qfluentwidgets import (PixmapLabel, SubtitleLabel, TitleLabel)
-import LoginUI_rc
+import ui.login.LoginUI_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -74,13 +74,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.TitleLabel_2 = TitleLabel(self.frame)
         self.TitleLabel_2.setObjectName(u"TitleLabel_2")
-        self.TitleLabel_2.setStyleSheet(u"font: 20pt \"Times New Roman\";")
+        self.TitleLabel_2.setStyleSheet(u"font: 20pt \"Times New Roman\";\n"
+"color: black;")
 
         self.horizontalLayout.addWidget(self.TitleLabel_2)
 
         self.TitleLabel = TitleLabel(self.frame)
         self.TitleLabel.setObjectName(u"TitleLabel")
-        self.TitleLabel.setStyleSheet(u"font: 20pt \"\u9ed1\u4f53\";")
+        self.TitleLabel.setStyleSheet(u"font: 20pt \"\u9ed1\u4f53\";\n"
+"color: black;")
 
         self.horizontalLayout.addWidget(self.TitleLabel)
 
@@ -114,7 +116,9 @@ class Ui_MainWindow(object):
         self.message_bar = SubtitleLabel(self.mainbox)
         self.message_bar.setObjectName(u"message_bar")
         self.message_bar.setStyleSheet(u"font: 700 15pt \"\u5b8b\u4f53\";\n"
-"")
+"color: black;\n"
+"border: 0px solid rgba(0, 0, 0, 0.073);\n"
+"border-top: 1px solid rgba(0, 0, 0, 0.183);")
         self.message_bar.setAlignment(Qt.AlignCenter)
 
         self.verticalLayout_2.addWidget(self.message_bar)

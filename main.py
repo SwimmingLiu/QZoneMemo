@@ -7,8 +7,8 @@ import logging
 # 禁止标准输出
 # sys.stdout = open(os.devnull, 'w')
 logging.disable(logging.CRITICAL)  # 禁用所有级别的日志
-from PySide6.QtGui import QIcon, Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon, Qt, QPalette
+from PySide6.QtWidgets import QApplication, QLabel
 from utils import glo
 from qzonememo.QZoneMemoWindow import QZoneMemoWindow
 from qzonememo.LoginWindow import LoginWindow
@@ -23,6 +23,14 @@ if __name__ == '__main__':
     # 创建窗口实例
     login_window = LoginWindow()
     qzonememo_window = QZoneMemoWindow()
+
+    # 检查系统是否为夜间模式
+    palette = app.palette()
+    is_dark_mode = palette.color(QPalette.Window).value() < 128  # 判断是否是夜间模式
+
+    # if is_dark_mode:
+    #     # 如果是夜间模式，修改login_window和qzonememo_window的字体颜色为黑色
+    #     app.setStyleSheet("QLabel{color: black; background-color:white;}")
 
     # 初始化全局变量管理器，并设置值
     glo._init()  # 初始化全局变量空间

@@ -91,7 +91,8 @@
           <item>
            <widget class="TitleLabel" name="TitleLabel_2">
             <property name="styleSheet">
-             <string notr="true">font: 20pt &quot;Times New Roman&quot;;</string>
+             <string notr="true">font: 20pt &quot;Times New Roman&quot;;
+color: black;</string>
             </property>
             <property name="text">
              <string>QZoneMemo - </string>
@@ -101,7 +102,8 @@
           <item>
            <widget class="TitleLabel" name="TitleLabel">
             <property name="styleSheet">
-             <string notr="true">font: 20pt &quot;黑体&quot;;</string>
+             <string notr="true">font: 20pt &quot;黑体&quot;;
+color: black;</string>
             </property>
             <property name="text">
              <string>空间回忆录</string>
@@ -153,6 +155,7 @@
 	font: 700 15pt &quot;宋体&quot;;
    padding: 15px 0px 15px 40px;
     outline: none;
+	color: black;
 }
 
 ToolButton {
@@ -492,6 +495,7 @@ PillToolButton:disabled:checked {
 	font: 700 15pt &quot;宋体&quot;;
    padding: 15px 0px 15px 40px;
     outline: none;
+	color: black;
 }
 
 ToolButton {
@@ -831,6 +835,7 @@ PillToolButton:disabled:checked {
 	font: 700 15pt &quot;宋体&quot;;
    padding: 15px 0px 15px 40px;
     outline: none;
+	color: black;
 }
 
 ToolButton {
@@ -1251,7 +1256,7 @@ border-radius: 7px;
           </font>
          </property>
          <property name="styleSheet">
-          <string notr="true"/>
+          <string notr="true">color: black;</string>
          </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:700;&quot;&gt;通知&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1282,7 +1287,8 @@ border-radius: 7px;
          </property>
          <property name="styleSheet">
           <string notr="true"> font-weight:700;
-font-size:12px;</string>
+font-size:12px;
+color: black;</string>
          </property>
          <property name="text">
           <string/>
