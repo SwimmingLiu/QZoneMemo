@@ -41,7 +41,7 @@ class QZoneMemoWindow(GUIWindow):
         self.find_qzone_memo_thread.send_login_status.connect(lambda msg: self.createSuccessInfoBar("登录状态", msg))
         self.find_qzone_memo_thread.send_progress.connect(lambda x: self.ui.progress_bar.setValue(int(x)))
         self.find_qzone_memo_thread.send_message.connect(lambda msg: self.showStatus(msg))
-        self.find_qzone_memo_thread.send_result.connect(lambda msg:self.createSuccessInfoBar("提示", msg))
+        self.find_qzone_memo_thread.send_result.connect(lambda msg: self.createSuccessInfoBar("提示", msg))
         # --- 进度条 --- #
 
     # 展示网页版回忆录
@@ -51,6 +51,7 @@ class QZoneMemoWindow(GUIWindow):
             webbrowser.open(self.find_qzone_memo_thread.render_html_url)
         else:
             self.createErrorInfoBar("提示", "尚未完成找回QQ空间回忆任务！")
+
     # 打开Excel窗口
     def exportExcel(self):
         # 获取当前系统平台
@@ -109,14 +110,16 @@ class QZoneMemoWindow(GUIWindow):
                     shutil.rmtree(self.config.temp_path)
                 if os.path.exists(self.config.user_path):
                     shutil.rmtree(self.config.user_path)
+                if os.path.exists(self.config.fetch_all_path):
+                    shutil.rmtree(self.config.fetch_all_path)
             except Exception:
                 time.sleep(1)
                 if os.path.exists(self.config.temp_path):
                     shutil.rmtree(self.config.temp_path)
                 if os.path.exists(self.config.user_path):
                     shutil.rmtree(self.config.user_path)
-            os.makedirs(self.config.temp_path, exist_ok=True)
-            os.makedirs(self.config.user_path, exist_ok=True)
+                if os.path.exists(self.config.fetch_all_path):
+                    shutil.rmtree(self.config.fetch_all_path)
             event.ignore()
     # --- 关闭窗口 自动删除Result缓存 --- #
 

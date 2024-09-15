@@ -163,6 +163,4 @@ cython_debug/
 BinaryExec/
 build/
 main.spec
-config/temp/
-config/user/
-config/fetch-all/
+

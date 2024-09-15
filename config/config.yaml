@@ -1,3 +1,4 @@
 temp : ./config/temp/
 user : ./config/user/
 result : ./result/
+fetch-all : ./config/fetch-all/

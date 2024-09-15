@@ -1,5 +1,6 @@
 import os
 import yaml
+
 CONFIG_PATH = 'config/config.yaml'
 
 
@@ -12,7 +13,7 @@ class ConfigUtil:
         self.temp_path = self.config['temp']
         self.user_path = self.config['user']
         self.result_path = self.config['result']
-
+        self.fetch_all_path = self.config['fetch-all']
         # 初始化文件夹
         self.init_folders()
 
@@ -37,6 +38,11 @@ class ConfigUtil:
         if not os.path.exists(self.result_path):
             os.makedirs(self.result_path)
             print(f"Created directory: {self.result_path}")
+
+        # 初始化fetch-all文件夹
+        if not os.path.exists(self.fetch_all_path):
+            os.makedirs(self.fetch_all_path)
+            print(f"Created directory: {self.fetch_all_path}")
 
     def save_user(self, cookies):
         # 保存用户的cookies

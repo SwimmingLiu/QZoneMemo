@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime
 from bs4 import BeautifulSoup
 import utils.ToolsUtil as Tools
@@ -21,21 +22,27 @@ class FindQZoneMemoThread(QThread):
 
     def __init__(self):
         super().__init__()
+        # --- 初始化QQ空间数据存储变量 --- #
         self.texts = []
         self.all_friends = []
         self.other_message = []
         self.user_message = []
         self.leave_message = []
         self.forward_message = []
+        # --- 初始化QQ空间数据存储变量 --- #
         self.user_nickname = None
         self.qzone_client = None
         self.config = ConfigUtil()
         self.progress_bar = 0
         self.render_html_url = None
-        self.WORKDIR = "./config/fetch-all/"
+        # --- 未删除说说相关配置信息 --- #
+        self.WORKDIR = self.config.fetch_all_path
         self.USER_QZONE_INFO = 'user_qzone_info.json'
         self.QZONE_MOMENTS_ALL = 'qzone_moments_all.json'
+        self.default_page_size = 30
+        # --- 未删除说说相关配置信息 --- #
 
+    # 生成历史说说网页版
     def render_html(self, shuoshuo_path, zhuanfa_path):
         # 读取 Excel 文件内容
         shuoshuo_df = pd.read_excel(shuoshuo_path)
@@ -105,6 +112,7 @@ class FindQZoneMemoThread(QThread):
         self.render_html_url = output_file
         self.send_message.emit('复刻QQ空间说说记录成功!')
 
+    # 保存数据
     def save_data(self):
         user_save_path = self.config.result_path + self.qzone_client.uin + '/'
         pic_save_path = user_save_path + 'pic/'
@@ -170,6 +178,166 @@ class FindQZoneMemoThread(QThread):
         self.render_html(shuoshuo_path, zhuanfa_path)
         self.send_result.emit('已完成QQ空间历史数据回忆')
 
+
+    # 获取消息总数
+    def get_message_count(self):
+        # 初始的总量范围
+        lower_bound = 0
+        upper_bound = 10000000  # 假设最大总量为10000000
+        total = upper_bound // 2  # 初始的总量为上下界的中间值
+        count = 0
+        while lower_bound <= upper_bound:
+            response = self.qzone_client.get_message(total, 100)
+            if response is None:
+                print("获取消息失败")
+                return None
+            if "li" in response.text:
+                # 请求成功，总量应该在当前总量的右侧
+                lower_bound = total + 1
+            else:
+                # 请求失败，总量应该在当前总量的左侧
+                upper_bound = total - 1
+            total = (lower_bound + upper_bound) // 2  # 更新总量为新的中间值
+            count += 1
+            self.send_progress.emit(count)
+        self.send_progress.emit(100)
+        return total
+
+    # 获取所有可见的未删除的说说+高清图片（包含2014年之前）
+    def get_visible_moments_list(self):
+        # 1. 获取说说总条数
+        user_qzone_info = Tools.read_txt_file(self.WORKDIR, self.USER_QZONE_INFO)
+        if not user_qzone_info:
+            # 样本缓存未找到，开始请求获取样本
+            qq_userinfo_response = self.get_user_qzone_info(1)
+            Tools.write_txt_file(self.WORKDIR, self.USER_QZONE_INFO, qq_userinfo_response)
+            user_qzone_info = Tools.read_txt_file(self.WORKDIR, self.USER_QZONE_INFO)
+        if not Tools.is_valid_json(user_qzone_info):
+            print("获取QQ空间信息失败")
+            return None
+        json_dict = json.loads(user_qzone_info)
+        total_moments_count = json_dict['total']
+        self.send_message.emit(f'你的未删除说说总条数{total_moments_count}')
+
+        # 当前未删除说说总数为0, 直接返回
+        if total_moments_count == 0:
+            return None
+
+        # 2. 获取所有说说数据
+        # print("开始获取所有未删除说说")
+        qzone_moments_all = Tools.read_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL)
+        if not qzone_moments_all:
+            # 缓存未找到，开始请求获取所有未删除说说
+            # qq_userinfo_response = self.get_user_qzone_info(totalMomentsCount)
+            # Tools.write_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL, qq_userinfo_response)
+            # qzone_moments_all = Tools.read_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL)
+            # 缓存未找到，准备分页获取所有未删除说说
+            default_page_size = self.default_page_size  # 默认一页30条
+            total_page_num = math.ceil(total_moments_count / default_page_size)  # 总页数
+            all_page_data = []  # 用于存储所有页的数据
+            for current_page_num in range(0, total_page_num):
+                # 数据偏移量
+                pos = current_page_num * default_page_size
+                qq_userinfo_response = self.get_user_qzone_info(default_page_size, pos)
+                current_page_data = json.loads(qq_userinfo_response)["msglist"]
+                if current_page_data:
+                    all_page_data.extend(current_page_data)
+                self.send_progress.emit(int(float(current_page_num) / total_page_num * 100.0))
+                time.sleep(0.02)
+            self.send_progress.emit(100)
+            qq_userinfo = json.dumps({"msglist": all_page_data}, ensure_ascii=False, indent=2)
+            Tools.write_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL, qq_userinfo)
+            qzone_moments_all = Tools.read_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL)
+
+        if not Tools.is_valid_json(qzone_moments_all):
+            print("获取QQ空间说说失败")
+            return None
+        json_dict = json.loads(qzone_moments_all)
+        qzone_moments_list = json_dict['msglist']
+        self.send_message.emit(f'已 获 取 到 的 未 删 除 说 说 总 条 数: {len(qzone_moments_list)}')
+
+        # 3. 添加说说列表
+        texts = []
+        for index, item in enumerate(qzone_moments_list):
+            content = item['content'] if item['content'] else ""
+            nickname = item['name']
+            create_time = Tools.format_timestamp(item['created_time'])
+            pictures = ""
+            # 如果有图片
+            if 'pic' in item:
+                for index, picture in enumerate(item['pic']):
+                    pictures += picture['url1'] + ","
+            # 去除最后一个逗号
+            pictures = pictures[:-1] if pictures != "" else pictures
+            comments = []
+            if 'commentlist' in item:
+                for index, commentToMe in enumerate(item['commentlist']):
+                    comment_content = commentToMe['content']
+                    comment_create_time = commentToMe['createTime2']
+                    comment_nickname = commentToMe['name']
+                    comment_uin = commentToMe['uin']
+                    # 时间，内容，昵称，QQ号
+                    comments.append([comment_create_time, comment_content, comment_nickname, comment_uin])
+            # 格式：时间、内容、图片链接、转发内容、评论内容
+            texts.append([create_time, f"{nickname} ：{content}", pictures, comments])
+            self.send_progress.emit(int(float(index) / len(qzone_moments_list) * 100.0))
+        self.send_progress.emit(100)
+        return texts
+
+    # 获取用户QQ空间相关信息
+    def get_user_qzone_info(self, page_size, offset=0):
+        url = 'https://user.qzone.qq.com/proxy/domain/taotao.qq.com/cgi-bin/emotion_cgi_msglist_v6'
+        cookies = self.qzone_client.cookies
+        g_tk = self.qzone_client.bkn(cookies.get('p_skey'))
+        qq_number = re.sub(r'o0*', '', cookies.get('uin'))
+        skey = cookies.get('skey')
+        p_uin = cookies.get('p_uin')
+        pt4_token = cookies.get('pt4_token')
+        p_skey = cookies.get('p_skey')
+        headers = {
+            'accept': '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'cookie': f'uin={p_uin};skey={skey};p_uin={p_uin};pt4_token={pt4_token};p_skey={p_skey}',
+            'priority': 'u=1, i',
+            'referer': f'https://user.qzone.qq.com/{qq_number}/main',
+            'sec-ch-ua': '"Not;A=Brand";v="24", "Chromium";v="128"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Linux"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+        }
+
+        params = {
+            'uin': f'{qq_number}',
+            'ftype': '0',
+            'sort': '0',
+            'pos': f'{offset}',
+            'num': f'{page_size}',
+            'replynum': '100',
+            'g_tk': f'{g_tk}',
+            'callback': '_preloadCallback',
+            'code_version': '1',
+            'format': 'jsonp',
+            'need_private_comment': '1'
+        }
+        try:
+            response = requests.get(url, headers=headers, params=params)
+        except Exception as err:
+            print(f"获取用户QQ空间相关信息失败: {err}")
+            return None
+        raw_response = response.text
+        # 使用正则表达式去掉 _preloadCallback()，并提取其中的 JSON 数据
+        raw_txt = re.sub(r'^_preloadCallback\((.*)\);?$', r'\1', raw_response, flags=re.S)
+        # 再转一次是为了去掉响应值本身自带的转义符http:\/\/ 
+        json_dict = json.loads(raw_txt)
+        if json_dict['code'] != 0:
+            print(f"错误 {json_dict['message']}")
+            return None
+        return json.dumps(json_dict, indent=2, ensure_ascii=False)
+
+    # 根据QQ空间消息列表获取说说
     def get_memo(self, count):
         self.send_message.emit("开 始 获 取 历 史 Q Q 空 间 动 态 详 情 ...")
         for i in range(int(count / 100) + 1):
@@ -187,6 +355,7 @@ class FindQZoneMemoThread(QThread):
                 print(f"Get Memo Err: {err}")
         self.send_progress.emit(100)
 
+    # 爬取和处理说说数据
     def process_element(self, element):
         put_time = None
         text = None
@@ -244,147 +413,6 @@ class FindQZoneMemoThread(QThread):
             self.save_data()
         else:
             self.send_message.emit("获 取 到 的 历 史 Q Q 空 间 数 据 为 空!")
-
-    # 获取消息总数
-    def get_message_count(self):
-        # 初始的总量范围
-        lower_bound = 0
-        upper_bound = 10000000  # 假设最大总量为10000000
-        total = upper_bound // 2  # 初始的总量为上下界的中间值
-        count = 0
-        while lower_bound <= upper_bound:
-            response = self.qzone_client.get_message(total, 100)
-            if response is None:
-                print("获取消息失败")
-                return None
-            if "li" in response.text:
-                # 请求成功，总量应该在当前总量的右侧
-                lower_bound = total + 1
-            else:
-                # 请求失败，总量应该在当前总量的左侧
-                upper_bound = total - 1
-            total = (lower_bound + upper_bound) // 2  # 更新总量为新的中间值
-            count += 1
-            self.send_progress.emit(count)
-        self.send_progress.emit(100)
-        return total
-
-    # 获取所有可见的未删除的说说+高清图片（包含2014年之前）
-    def get_visible_moments_list(self):
-        # 1. 获取说说总条数
-        user_qzone_info = Tools.read_txt_file(self.WORKDIR, self.USER_QZONE_INFO)
-        if not user_qzone_info:
-            # 样本缓存未找到，开始请求获取样本
-            qq_userinfo_response = self.get_user_qzone_info(1)
-            Tools.write_txt_file(self.WORKDIR, self.USER_QZONE_INFO, qq_userinfo_response)
-            user_qzone_info = Tools.read_txt_file(self.WORKDIR, self.USER_QZONE_INFO)
-        if not Tools.is_valid_json(user_qzone_info):
-            print("获取QQ空间信息失败")
-            return None
-        json_dict = json.loads(user_qzone_info)
-        totalMomentsCount = json_dict['total']
-        self.send_message.emit(f'你的未删除说说总条数{totalMomentsCount}')
-
-        # 当前未删除说说总数为0, 直接返回
-        if totalMomentsCount == 0:
-            return None
-
-        # 2. 获取所有说说数据
-        # print("开始获取所有未删除说说")
-        qzone_moments_all = Tools.read_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL)
-        if not qzone_moments_all:
-            # 缓存未找到，开始请求获取所有未删除说说
-            qq_userinfo_response = self.get_user_qzone_info(totalMomentsCount)
-            Tools.write_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL, qq_userinfo_response)
-            qzone_moments_all = Tools.read_txt_file(self.WORKDIR, self.QZONE_MOMENTS_ALL)
-
-        if not Tools.is_valid_json(qzone_moments_all):
-            print("获取QQ空间说说失败")
-            return None
-        json_dict = json.loads(qzone_moments_all)
-        qzone_moments_list = json_dict['msglist']
-        self.send_message.emit(f'已获取到数据的说说总条数{len(qzone_moments_list)}')
-
-        # 3. 添加说说列表
-        texts = []
-        for index, item in enumerate(qzone_moments_list):
-            content = item['content'] if item['content'] else ""
-            nickname = item['name']
-            create_time = Tools.format_timestamp(item['created_time'])
-            pictures = ""
-            # 如果有图片
-            if 'pic' in item:
-                for index, picture in enumerate(item['pic']):
-                    pictures += picture['url1'] + ","
-            # 去除最后一个逗号
-            pictures = pictures[:-1] if pictures != "" else pictures
-            comments = []
-            if 'commentlist' in item:
-                for index, commentToMe in enumerate(item['commentlist']):
-                    comment_content = commentToMe['content']
-                    comment_create_time = commentToMe['createTime2']
-                    comment_nickname = commentToMe['name']
-                    comment_uin = commentToMe['uin']
-                    # 时间，内容，昵称，QQ号
-                    comments.append([comment_create_time, comment_content, comment_nickname, comment_uin])
-            # 格式：时间、内容、图片链接、转发内容、评论内容
-            texts.append([create_time, f"{nickname} ：{content}", pictures, comments])
-            self.send_progress.emit(int(float(index) / len(qzone_moments_list) * 100.0))
-        self.send_progress.emit(100)
-        return texts
-
-    # 获取用户QQ空间相关信息
-    def get_user_qzone_info(self, num):
-        url = 'https://user.qzone.qq.com/proxy/domain/taotao.qq.com/cgi-bin/emotion_cgi_msglist_v6'
-        cookies = self.qzone_client.cookies
-        g_tk = self.qzone_client.bkn(cookies.get('p_skey'))
-        qq_number = re.sub(r'o0*', '', cookies.get('uin'))
-        skey = cookies.get('skey')
-        p_uin = cookies.get('p_uin')
-        pt4_token = cookies.get('pt4_token')
-        p_skey = cookies.get('p_skey')
-        headers = {
-            'accept': '*/*',
-            'accept-language': 'en-US,en;q=0.9',
-            'cookie': f'uin={p_uin};skey={skey};p_uin={p_uin};pt4_token={pt4_token};p_skey={p_skey}',
-            'priority': 'u=1, i',
-            'referer': f'https://user.qzone.qq.com/{qq_number}/main',
-            'sec-ch-ua': '"Not;A=Brand";v="24", "Chromium";v="128"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Linux"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-        }
-
-        params = {
-            'uin': f'{qq_number}',
-            'ftype': '0',
-            'sort': '0',
-            'pos': '0',
-            'num': f'{num}',
-            'replynum': '100',
-            'g_tk': f'{g_tk}',
-            'callback': '_preloadCallback',
-            'code_version': '1',
-            'format': 'jsonp',
-            'need_private_comment': '1'
-        }
-        try:
-            response = requests.get(url, headers=headers, params=params)
-        except Exception as e:
-            print(e)
-        raw_response = response.text
-        # 使用正则表达式去掉 _preloadCallback()，并提取其中的 JSON 数据
-        raw_txt = re.sub(r'^_preloadCallback\((.*)\);?$', r'\1', raw_response, flags=re.S)
-        # 再转一次是为了去掉响应值本身自带的转义符http:\/\/ 
-        json_dict = json.loads(raw_txt)
-        if json_dict['code'] != 0:
-            print(f"错误 {json_dict['message']}")
-            return None
-        return json.dumps(json_dict, indent=2, ensure_ascii=False)
-
 
 if __name__ == '__main__':
     thread = FindQZoneMemoThread()
