@@ -65,6 +65,9 @@ class FindQZoneMemoThread(QThread):
                 image_html = '<div class="image">'
                 for img_url in img_url_lst:
                     if img_url and img_url.startswith('http'):
+                        # 将图片替换为高清图
+                        img_url = str(img_url).replace("/m&ek=1&kp=1", "/s&ek=1&kp=1")
+                        img_url = str(img_url).replace(r"!/m/", "!/s/")
                         image_html += f'<img src="{img_url}" alt="图片">\n'
                 image_html += "</div>"
                 comment_html = ""
@@ -230,7 +233,8 @@ class FindQZoneMemoThread(QThread):
             if user_moments and len(user_moments) > 0:
                 # 如果可见说说的内容是从消息列表恢复的说说内容子集，则不添加到消息列表中
                 self.texts = [t for t in self.texts if
-                         not any(Tools.get_content_from_split(u[1]) in Tools.get_content_from_split(t[1]) for u in user_moments)]
+                              not any(Tools.get_content_from_split(u[1]) in Tools.get_content_from_split(t[1]) for u in
+                                      user_moments)]
                 self.texts.extend(user_moments)
         except Exception as err:
             print(f"获取未删除QQ空间记录发生异常: {str(err)}")
@@ -380,7 +384,8 @@ class FindQZoneMemoThread(QThread):
             print(f"错误 {json_dict['message']}")
             return None
         return json.dumps(json_dict, indent=2, ensure_ascii=False)
-    
+
+
 if __name__ == '__main__':
     thread = FindQZoneMemoThread()
     thread.start()
