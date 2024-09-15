@@ -19,6 +19,9 @@ except Exception as e:
     if platform.system() == "Linux":
         print("对于基于 RPM 的系统（如 Fedora), 您可以运行以下命令:")
         print("sudo dnf install -y zbar")
+    elif platform.system() == "Darwin":
+        print("MacOS 安装 zbar 请参考:")
+        print("https://github.com/LibraHp/GetQzonehistory/issues/23#issuecomment-2349269027")
     print("有关更多安装指南，请参考 zbar 的官方文档或您的发行版文档。")
     sys.exit(1)
 
