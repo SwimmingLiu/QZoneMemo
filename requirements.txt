@@ -11,3 +11,4 @@ Pyside6
 PySide6-Fluent-Widgets[full]
 colorlog
 opencv-python
+pyyaml

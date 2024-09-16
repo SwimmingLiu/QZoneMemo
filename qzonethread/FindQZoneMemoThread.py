@@ -68,7 +68,11 @@ class FindQZoneMemoThread(QThread):
                 if len(content_lst) == 1:
                     continue
                 nickname = content_lst[0]
+                # 将nickname当中的QQ表情替换为img标签
+                nickname = re.sub(r'\[em\](.*?)\[/em\]', Tools.replace_em_to_img, nickname)
                 message = content_lst[1]
+                # 将message当中的QQ表情替换为img标签
+                message = re.sub(r'\[em\](.*?)\[/em\]', Tools.replace_em_to_img, message)
                 image_html = '<div class="image">'
                 for img_url in img_url_lst:
                     if img_url and img_url.startswith('http'):
@@ -83,6 +87,9 @@ class FindQZoneMemoThread(QThread):
                     comments = eval(comments)
                     for comment in comments:
                         comment_create_time, comment_content, comment_nickname, comment_uin = comment
+                        # 将评论人昵称和评论内容中的QQ表情替换为img标签
+                        comment_nickname = re.sub(r'\[em\](.*?)\[/em\]', Tools.replace_em_to_img, comment_nickname)
+                        comment_content = re.sub(r'\[em\](.*?)\[/em\]', Tools.replace_em_to_img, comment_content)
                         comment_avatar_url = f"https://q.qlogo.cn/headimg_dl?dst_uin={comment_uin}&spec=640&img_type=jpg"
                         comment_html += comment_template.format(
                             avatar_url=comment_avatar_url,
@@ -136,14 +143,13 @@ class FindQZoneMemoThread(QThread):
                 # 如果图片链接为空或者不是http链接，则跳过
                 if not item_pic_link or len(item_pic_link) == 0 or 'http' not in item_pic_link:
                     continue
-                # 使用正则表达式匹配并替换 [em]xxx[/em] 格式的内容为空
-                pic_name = re.sub(r'\[em\].*?\[/em\]', '', item_text)
-                # 去除所有中文和英文符号的正则表达式
-                pic_name = re.sub(r'[^\w\s]', '_', pic_name).replace(" ", "")
-                # 去除换行符
-                pic_name = pic_name.replace(r"\n", "")
-                # 去除表情符号
-                pic_name = pic_name.replace(r"[em]", "").replace("[_em]", "")
+                # # 使用正则表达式匹配并替换 [em]xxx[/em] 格式的内容为空
+                # pic_name = re.sub(r'\[em\].*?\[/em\]', '', item_text)
+                # # 去除所有中文和英文符号的正则表达式
+                # pic_name = re.sub(r'[^\w\s]', '_', pic_name).replace(" ", "")
+                # # 去除非法字符
+                # pic_name = re.sub(r'[\\/:*?"<>|\r\n]+', '_', pic_name)
+                pic_name = re.sub(r'\[em\].*?\[/em\]|[^\w\s]|[\\/:*?"<>|\r\n]+', '_', item_text).replace(" ", "")
                 if len(pic_name) > 40:
                     pic_name = pic_name[:40] + '.jpg'
                 try:

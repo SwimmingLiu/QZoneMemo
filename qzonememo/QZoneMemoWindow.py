@@ -1,5 +1,4 @@
 import os
-os.chdir("../")
 import shutil
 import time
 import webbrowser
