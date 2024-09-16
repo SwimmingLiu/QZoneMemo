@@ -135,9 +135,15 @@ class FindQZoneMemoThread(QThread):
             for item_pic_link in item_pic_links:
                 # 如果图片链接为空或者不是http链接，则跳过
                 if not item_pic_link or len(item_pic_link) == 0 or 'http' not in item_pic_link:
-                    pass
-                pic_name = re.sub(r'[\\/:*?"<>|]', '_', item_text).replace(' ', '')
-                pic_name = pic_name.replace(r"\n", "_")
+                    continue
+                # 使用正则表达式匹配并替换 [em]xxx[/em] 格式的内容为空
+                pic_name = re.sub(r'\[em\].*?\[/em\]', '', item_text)
+                # 去除所有中文和英文符号的正则表达式
+                pic_name = re.sub(r'[^\w\s]', '_', pic_name).replace(" ", "")
+                # 去除换行符
+                pic_name = pic_name.replace(r"\n", "")
+                # 去除表情符号
+                pic_name = pic_name.replace(r"[em]", "").replace("[_em]", "")
                 if len(pic_name) > 40:
                     pic_name = pic_name[:40] + '.jpg'
                 try:
@@ -412,7 +418,7 @@ class FindQZoneMemoThread(QThread):
             if user_moments and len(user_moments) > 0:
                 # 如果可见说说的内容是从消息列表恢复的说说内容子集，则不添加到消息列表中
                 self.texts = [t for t in self.texts if
-                              not any(Tools.get_content_from_split(u[1]) in Tools.get_content_from_split(t[1]) for u in
+                              not any(Tools.is_any_mutual_exist(t[1], u[1]) for u in
                                       user_moments)]
                 self.texts.extend(user_moments)
         except Exception as err:

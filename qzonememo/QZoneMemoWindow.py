@@ -1,18 +1,17 @@
 import os
+os.chdir("../")
 import shutil
 import time
 import webbrowser
-
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QFileDialog
+from PySide6.QtWidgets import QApplication
 import platform
 import subprocess
 from qzonememo.GUIWindow import GUIWindow
 from qzonethread.FindQZoneMemoThread import FindQZoneMemoThread
-from ui.external.customGrips import CustomGrip
 from ui.qzone_memo import Ui_MainWindow
 from utils import glo
-from PySide6.QtCore import Qt, QPropertyAnimation
+from PySide6.QtCore import QPropertyAnimation
 
 
 class QZoneMemoWindow(GUIWindow):

@@ -220,3 +220,10 @@ def read_txt_file(workdir, file_name):
         with open(base_path_file_name, 'r', encoding='utf-8') as file:
             return file.read()
     return None
+
+
+def is_any_mutual_exist(str1, str2):
+    str1 = get_content_from_split(str1)
+    str2 = get_content_from_split(str2)
+    return str1 in str2 or str2 in str1
+
