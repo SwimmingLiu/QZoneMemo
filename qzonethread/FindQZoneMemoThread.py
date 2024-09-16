@@ -127,16 +127,20 @@ class FindQZoneMemoThread(QThread):
         pd.DataFrame(self.all_friends, columns=['昵称', 'QQ', '空间主页']).to_excel(
             user_save_path + self.qzone_client.uin + '_好友列表.xlsx', index=False)
         self.send_message.emit(f"已成功导出: {self.qzone_client.uin + '_好友列表.xlsx'}")
-        for item in self.texts:
+        self.send_message.emit(f"正 在 获 取 说 说 图 片 ...")
+        for index, item in enumerate(self.texts):
             item_text = item[1]
             # 可见说说中可能存在多张图片
             item_pic_links = str(item[2]).split(",")
             for item_pic_link in item_pic_links:
-                if item_pic_link and len(item_pic_link) > 0 and 'http' in item_pic_link:
-                    pic_name = re.sub(r'[\\/:*?"<>|]', '_', item_text).replace(' ', '')
-                    pic_name = pic_name.replace(r"\n", "_")
-                    if len(pic_name) > 40:
-                        pic_name = pic_name[:40] + '.jpg'
+                # 如果图片链接为空或者不是http链接，则跳过
+                if not item_pic_link or len(item_pic_link) == 0 or 'http' not in item_pic_link:
+                    pass
+                pic_name = re.sub(r'[\\/:*?"<>|]', '_', item_text).replace(' ', '')
+                pic_name = pic_name.replace(r"\n", "_")
+                if len(pic_name) > 40:
+                    pic_name = pic_name[:40] + '.jpg'
+                try:
                     response = requests.get(item_pic_link)
                     if response.status_code == 200:
                         # 防止图片重名
@@ -144,6 +148,9 @@ class FindQZoneMemoThread(QThread):
                             pic_name = pic_name.split('.')[0] + "_" + str(int(time.time())) + '.jpg'
                         with open(pic_save_path + pic_name, 'wb') as f:
                             f.write(response.content)
+                except Exception as err:
+                    print(f"Get Pic Err: {err}")
+
             if self.user_nickname in item_text:
                 if '留言' in item_text:
                     self.leave_message.append(item[:-1])
@@ -153,6 +160,9 @@ class FindQZoneMemoThread(QThread):
                     self.user_message.append(item)
             else:
                 self.other_message.append(item[:-1])
+            self.send_progress.emit(int(float(index) / len(self.texts) * 100.0))
+        self.send_progress.emit(100)
+        self.send_message.emit("已成功获取所有说说图片!")
         pd.DataFrame(self.user_message, columns=['时间', '内容', '图片链接', '评论']).to_excel(
             user_save_path + self.qzone_client.uin + '_说说列表.xlsx', index=False)
         self.send_message.emit(f"已成功导出: {self.qzone_client.uin + '_说说列表.xlsx'}")

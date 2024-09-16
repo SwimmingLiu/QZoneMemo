@@ -100,27 +100,31 @@ class QQLoginThread(QThread):
     # 获取QRCode
     def get_qr_code(self):
         url = 'https://ssl.ptlogin2.qq.com/ptqrshow?appid=549000912&e=4&l=Q&s=8&d=1000&v=3&t=0.8692955245720428&daid=5&pt_3rd_aid=0'
-        try:
-            resp = requests.get(url)
-            qrsig = requests.utils.dict_from_cookiejar(resp.cookies).get('qrsig')
+        qrsig = None
+        # 尝试获取二维码，如果获取失败，反复尝试五次
+        for i in range(5):
+            try:
+                resp = requests.get(url)
+                qrsig = requests.utils.dict_from_cookiejar(resp.cookies).get('qrsig')
 
-            with open(self.config.temp_path + 'QR.png', 'wb') as f:
-                f.write(resp.content)
+                with open(self.config.temp_path + 'QR.png', 'wb') as f:
+                    f.write(resp.content)
 
-            im = Image.open(self.config.temp_path + 'QR.png')
-            qrcode_img_cv2 = cv2.imdecode(np.fromfile(self.config.temp_path + 'QR.png', dtype=np.uint8), -1)
-            self.send_qrcode.emit(qrcode_img_cv2)
-            im = im.resize((350, 350))
-            # 解码二维码
-            decoded_objects = decode(im)
-            for obj in decoded_objects:
-                qr = qrcode.QRCode()
-                qr.add_data(obj.data.decode('utf-8'))
-                # qr.print_ascii(invert=True)
-            return qrsig
-
-        except Exception as err:
-            print(f"Get QRCode Err: {err}")
+                im = Image.open(self.config.temp_path + 'QR.png')
+                qrcode_img_cv2 = cv2.imdecode(np.fromfile(self.config.temp_path + 'QR.png', dtype=np.uint8), -1)
+                self.send_qrcode.emit(qrcode_img_cv2)
+                im = im.resize((350, 350))
+                # 解码二维码
+                decoded_objects = decode(im)
+                for obj in decoded_objects:
+                    qr = qrcode.QRCode()
+                    qr.add_data(obj.data.decode('utf-8'))
+                    # qr.print_ascii(invert=True)
+                break
+            except Exception as err:
+                print(f"Get QRCode Err: {err}")
+                time.sleep(2)
+        return qrsig
 
     def ptqrToken(self, qrsig):
         n, i, e = len(qrsig), 0, 0
