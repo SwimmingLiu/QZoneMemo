@@ -143,13 +143,7 @@ class FindQZoneMemoThread(QThread):
                 # 如果图片链接为空或者不是http链接，则跳过
                 if not item_pic_link or len(item_pic_link) == 0 or 'http' not in item_pic_link:
                     continue
-                # # 使用正则表达式匹配并替换 [em]xxx[/em] 格式的内容为空
-                # pic_name = re.sub(r'\[em\].*?\[/em\]', '', item_text)
-                # # 去除所有中文和英文符号的正则表达式
-                # pic_name = re.sub(r'[^\w\s]', '_', pic_name).replace(" ", "")
-                # # 去除非法字符
-                # pic_name = re.sub(r'[\\/:*?"<>|\r\n]+', '_', pic_name)
-                pic_name = re.sub(r'\[em\].*?\[/em\]|[^\w\s]|[\\/:*?"<>|\r\n]+', '_', item_text).replace(" ", "")
+                pic_name = re.sub(r'\[em\].*?\[/em\]|[^\w\s]|[\\/:*?"<>|\r\n]+', '_', item_text).replace(" ", "") + ".jpg"
                 if len(pic_name) > 40:
                     pic_name = pic_name[:40] + '.jpg'
                 try:
