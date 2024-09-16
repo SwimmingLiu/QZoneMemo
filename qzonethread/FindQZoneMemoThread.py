@@ -134,6 +134,7 @@ class FindQZoneMemoThread(QThread):
             for item_pic_link in item_pic_links:
                 if item_pic_link and len(item_pic_link) > 0 and 'http' in item_pic_link:
                     pic_name = re.sub(r'[\\/:*?"<>|]', '_', item_text).replace(' ', '')
+                    pic_name = pic_name.replace(r"\n", "_")
                     if len(pic_name) > 40:
                         pic_name = pic_name[:40] + '.jpg'
                     response = requests.get(item_pic_link)
@@ -177,7 +178,6 @@ class FindQZoneMemoThread(QThread):
         zhuanfa_path = user_save_path + self.qzone_client.uin + '_转发列表.xlsx'
         self.render_html(shuoshuo_path, zhuanfa_path)
         self.send_result.emit('已完成QQ空间历史数据回忆')
-
 
     # 获取消息总数
     def get_message_count(self):
@@ -413,6 +413,7 @@ class FindQZoneMemoThread(QThread):
             self.save_data()
         else:
             self.send_message.emit("获 取 到 的 历 史 Q Q 空 间 数 据 为 空!")
+
 
 if __name__ == '__main__':
     thread = FindQZoneMemoThread()

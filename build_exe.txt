@@ -1,2 +1,4 @@
+# 不带终端
 pyinstaller -D --hidden-import=pyzbar --distpath ".\BinaryExec" -w -i ".\images\Logo.ico" main.py --add-data ui:ui --add-data images:images
+# 带终端
 pyinstaller -D --hidden-import=pyzbar --distpath ".\BinaryExec" -i ".\images\Logo.ico" main.py --add-data ui:ui --add-data images:images

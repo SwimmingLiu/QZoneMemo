@@ -91,6 +91,7 @@ def get_html_template():
                 max-width: 33vw;
                 max-height: 33vh;
                 border-radius: 10px;
+                cursor: pointer;
             }}
             .comments {{
                 margin-top: 5px; /* 调整这里的值来减少间距 */

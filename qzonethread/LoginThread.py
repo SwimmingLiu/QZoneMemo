@@ -35,12 +35,14 @@ class QQLoginThread(QThread):
         super().__init__()
         self.config = ConfigUtil()
         self.qrsig = None
+        self.cookies = None
 
     def run(self):
         self.qrsig = self.get_qr_code()
-        cookies = self.get_login_info()
-        if cookies:
-            self.send_cookies.emit(cookies)
+        if self.qrsig:
+            self.cookies = self.get_login_info()
+        if self.cookies:
+            self.send_cookies.emit(self.cookies)
         # 获取cookies之后退出当前线程
         self.quit()
 
@@ -92,8 +94,7 @@ class QQLoginThread(QThread):
                         cancel_status = True
             except Exception as err:
                 print(f"Get Login Info Err: {err}")
-                break
-            time.sleep(3)
+            time.sleep(2)
         return None
 
     # 获取QRCode
