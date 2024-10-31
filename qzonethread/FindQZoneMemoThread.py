@@ -283,6 +283,10 @@ class FindQZoneMemoThread(QThread):
             if 'pic' in item:
                 for index, picture in enumerate(item['pic']):
                     pictures += picture['url1'] + ","
+            # 如果有视频
+            if 'video' in item:
+                for index, picture in enumerate(item['video']):
+                    pictures += picture['url1'] + ","
             # 去除最后一个逗号
             pictures = pictures[:-1] if pictures != "" else pictures
             comments = []
